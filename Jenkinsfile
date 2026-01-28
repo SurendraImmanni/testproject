@@ -17,9 +17,9 @@ pipeline {
         stage('Install Ansible on Jenkins') {
             steps {
                 sh '''
-                if ! command -v ansible >/dev/null 2>&1; then
-                  sudo apt update
-                  sudo apt install -y ansible
+                if ! sudo -u azureuser command -v ansible >/dev/null 2>&1; then
+                  sudo -u azureuser sudo apt update
+                  sudo -u azureuser sudo apt install -y ansible
                 fi
                 '''
             }
