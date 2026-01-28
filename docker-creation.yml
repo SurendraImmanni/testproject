@@ -4,15 +4,16 @@
   become: yes
 
   vars:
-    src_app_path: "/home/azureuser"        # Path on Ansible server
-    dest_app_path: "/home/azureuser"           # Target path on Docker server
+    # Files exist in Jenkins workspace (repo root)
+    dest_app_path: "/home/azureuser"      # Target path on Docker server
     image_name: "digitalform:v1"
     container_name: "digitalform-container"
 
   tasks:
-    - name: update cache
-      apt: 
+    - name: Update apt cache
+      apt:
         update_cache: yes
+
     # ----------------------------
     # Install & Start Docker
     # ----------------------------
@@ -28,15 +29,17 @@
         enabled: yes
 
     # ----------------------------
-    # Copy only required files
+    # Copy required files
     # ----------------------------
-
     - name: Ensure destination directory exists
       file:
         path: "{{ dest_app_path }}"
         state: directory
+        owner: azureuser
+        group: azureuser
+        mode: '0755'
 
-    - name: Copy Dockerfile and index.html from Ansible → Docker server
+    - name: Copy Dockerfile and index.html to /home/azureuser
       copy:
         src: "{{ item }}"
         dest: "{{ dest_app_path }}/"
@@ -44,13 +47,12 @@
         group: azureuser
         mode: '0644'
       loop:
-        - "{{ src_app_path }}/Dockerfile"
-        - "{{ src_app_path }}/index.html"
+        - Dockerfile
+        - index.html
 
     # ----------------------------
     # Build Image & Run Container
     # ----------------------------
-
     - name: Build Docker image from copied files
       command: docker build -t {{ image_name }} {{ dest_app_path }}
 
@@ -58,5 +60,5 @@
       command: docker rm -f {{ container_name }}
       ignore_errors: yes
 
-    - name: Run Docker container in same path
+    - name: Run Docker container
       command: docker run -d -p 80:80 --name {{ container_name }} {{ image_name }}
