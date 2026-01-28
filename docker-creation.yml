@@ -10,12 +10,15 @@
     container_name: "digitalform-container"
 
   tasks:
+    - name: update cache
+      apt: 
+        update_cache: yes
     # ----------------------------
     # Install & Start Docker
     # ----------------------------
     - name: Install docker
-      yum:
-        name: docker
+      apt:
+        name: docker.io
         state: present
 
     - name: Start and enable Docker
